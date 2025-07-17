@@ -3,8 +3,8 @@ import pandas as pd
 pd.options.mode.copy_on_write = True
 
 
-def process_requests(requests_df: pd.DataFrame) -> pd.DataFrame:
-    requests_df = requests_df.drop(
+def process_requests(requests: pd.DataFrame) -> pd.DataFrame:
+    requests = requests.drop(
         # Unnecessary
         columns=["n"]
     ).rename(
@@ -35,6 +35,7 @@ def process_requests(requests_df: pd.DataFrame) -> pd.DataFrame:
             "mdeo_int": "montevideo_interior",
         },
     )
+    requests = requests[~requests["id"].isna()]
 
     for column in [
         "ap_cv",
@@ -46,13 +47,13 @@ def process_requests(requests_df: pd.DataFrame) -> pd.DataFrame:
         "ecg_previo",
         "holter_previo",
     ]:
-        requests_df[column] = clean_bool(requests_df[column])
+        requests[column] = clean_bool(requests[column])
 
-    return requests_df
+    return requests
 
 
-def process_pacemakers(pacemakers_df: pd.DataFrame) -> pd.DataFrame:
-    pacemakers_df = pacemakers_df.drop(
+def process_pacemakers(pacemakers: pd.DataFrame) -> pd.DataFrame:
+    pacemakers = pacemakers.drop(
         # Unnecessary
         columns=["n"],
     ).rename(
@@ -71,43 +72,40 @@ def process_pacemakers(pacemakers_df: pd.DataFrame) -> pd.DataFrame:
             "cual_comp2": "complicacion2",
         },
     )
+    pacemakers = pacemakers[~pacemakers["id"].isna()]
 
-    pacemakers_df["vivo_al_alta"] = pacemakers_df["vivo_al_alta"].map(
+    pacemakers["vivo_al_alta"] = pacemakers["vivo_al_alta"].map(
         {"Vivo": "S", "Fallecido": "N"}
     )
 
-    pacemakers_df["tipo_imae_implante"] = pacemakers_df["tipo_imae_implante"].map(
+    pacemakers["tipo_imae_implante"] = pacemakers["tipo_imae_implante"].map(
         {"PRI": "privado", "PUBLICO": "publico"}
     )
 
     for column in ["uso_de_introductor", "complicaciones"]:
-        pacemakers_df[column] = clean_bool(pacemakers_df[column])
+        pacemakers[column] = clean_bool(pacemakers[column])
 
-    return pacemakers_df
+    return pacemakers
 
 
-def merge_dataframes(
-    requests_df: pd.DataFrame, pacemakers_df: pd.DataFrame
-) -> pd.DataFrame:
+def merge_dataframes(requests: pd.DataFrame, pacemakers: pd.DataFrame) -> pd.DataFrame:
     return pd.merge(
-        requests_df,
-        pacemakers_df,
+        requests,
+        pacemakers,
         on="id",
         how="inner",
         suffixes=(None, None),
     )
 
 
-def process_merged(merged_df: pd.DataFrame) -> pd.DataFrame:
-    merged_df = merged_df.drop_duplicates(subset=["id"])
+def process_merged(merged: pd.DataFrame) -> pd.DataFrame:
+    merged = merged.drop_duplicates(subset=["id"])
 
-    merged_df = merged_df[
-        merged_df["sexo"].isin(["M", "F"]) & merged_df["edad"].notna()
-    ]
+    merged = merged[merged["sexo"].isin(["M", "F"]) & merged["edad"].notna()]
 
-    merged_df["complicaciones"] = clean_bool(merged_df["complicaciones"])
+    merged["complicaciones"] = clean_bool(merged["complicaciones"])
 
-    return merged_df
+    return merged
 
 
 def clean_bool(series: pd.Series) -> pd.Series:
@@ -115,16 +113,16 @@ def clean_bool(series: pd.Series) -> pd.Series:
 
 
 def clean() -> None:
-    requests_df = pd.read_excel("requests.xls")
-    pacemakers_df = pd.read_excel("pacemakers.xls")
+    requests = pd.read_excel("requests.xls")
+    pacemakers = pd.read_excel("pacemakers.xls")
 
-    requests_df = process_requests(requests_df)
-    pacemakers_df = process_pacemakers(pacemakers_df)
+    requests = process_requests(requests)
+    pacemakers = process_pacemakers(pacemakers)
 
-    merged_df = merge_dataframes(requests_df, pacemakers_df)
-    merged_df = process_merged(merged_df)
+    merged = merge_dataframes(requests, pacemakers)
+    merged = process_merged(merged)
 
-    merged_df.to_csv("data.tsv", index=False, sep="\t")
+    merged.to_csv("data.tsv", index=False, sep="\t")
 
 
 if __name__ == "__main__":
