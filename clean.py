@@ -69,6 +69,7 @@ def process_pacemakers(pacemakers: pd.DataFrame) -> pd.DataFrame:
             "modo": "modo_de_marcapasos",
             "comp": "complicaciones",
             "cafecrea": "fecha_realizacion",
+            "año": "anio_realizacion",
             "cual_comp1": "complicacion1",
             "cual_comp2": "complicacion2",
         },
