@@ -68,6 +68,7 @@ def process_pacemakers(pacemakers: pd.DataFrame) -> pd.DataFrame:
             "uso_intro": "uso_de_introductor",
             "modo": "modo_de_marcapasos",
             "comp": "complicaciones",
+            "cafecrea": "fecha_realizacion",
             "cual_comp1": "complicacion1",
             "cual_comp2": "complicacion2",
         },
@@ -114,7 +115,7 @@ def clean_bool(series: pd.Series) -> pd.Series:
 
 def clean() -> None:
     requests = pd.read_excel("requests.xls")
-    pacemakers = pd.read_excel("pacemakers.xls")
+    pacemakers = pd.read_excel("pacemakers.xls", parse_dates=["cafecrea"])
 
     requests = process_requests(requests)
     pacemakers = process_pacemakers(pacemakers)
