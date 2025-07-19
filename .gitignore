@@ -1,4 +1,5 @@
-venv
+.venv
 *.xls
 *.csv
 *.tsv
+.ruff_cache

@@ -1,9 +1,4 @@
 {
-  "include": ["clean.py"],
-  "exclude": [
-    "**/node_modules",
-    "**/__pycache__",
-    "src/experimental",
-    "src/typestubs"
-  ]
+  "include": ["src/*.py"],
+  "exclude": ["**/node_modules", "**/__pycache__"]
 }
