@@ -43,7 +43,8 @@ def process_requests(requests: pd.DataFrame) -> pd.DataFrame:
             "zeholr1": "holter_previo_resultado2",
             "diag_1": "diagnostico1",
             "diag_2": "diagnostico2",
-            "mdeo_int": "montevideo_o_interior",
+            "Origen_pa": "origen_paciente",
+            "IMAE": "imae",
         },
     )
 
@@ -52,6 +53,10 @@ def process_requests(requests: pd.DataFrame) -> pd.DataFrame:
         & requests["sexo"].isin(["M", "F"])
         & requests["edad"].notna()
     ]
+
+    requests["imae"] = requests["imae"].map(
+        {"MVD": "Montevideo", "INTERIOR": "Interior"}
+    )
 
     for column in [
         "ap_cardiovasculares",
