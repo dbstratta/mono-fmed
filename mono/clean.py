@@ -127,6 +127,39 @@ def process_merged(merged: pd.DataFrame) -> pd.DataFrame:
     return merged
 
 
+def merge_columns(merged: pd.DataFrame, column_base: str, n: int) -> pd.DataFrame:
+    dfs = []
+
+    for i in range(1, n + 1):
+        df = (
+            merged[
+                [
+                    "id",
+                    "sexo",
+                    "tipo_imae_implante",
+                    f"{column_base}{i}",
+                ]
+            ]
+            .copy()
+            .rename(columns={f"{column_base}{i}": column_base})
+        )
+        df = df[df[column_base].notna()]
+
+        dfs.append(df)
+
+    cardiovascular_history_df = pd.concat(dfs).sort_values(by=column_base)
+
+    return cardiovascular_history_df
+
+
+def merge_columns_and_write(
+    merged: pd.DataFrame, column_base: str, n: int, data_path: Path, file_name: str
+):
+    merge_columns(merged, column_base, n).to_csv(
+        f"{data_path}/{file_name}", index=False, sep="\t"
+    )
+
+
 def clean_bool(series: pd.Series) -> pd.Series:
     return series.map({0: "N", 1: "S", pd.NA: "N", "S": "S", "N": "N"})
 
@@ -141,6 +174,10 @@ def clean() -> None:
 
     merged = merge_dataframes(requests, pacemakers)
     merged = process_merged(merged)
+
+    merge_columns_and_write(
+        merged, "ap_cardiovascular", 4, data_path, "cardiovascular_history.tsv"
+    )
 
     merged.to_csv(f"{data_path}/cleaned.tsv", index=False, sep="\t")
 
