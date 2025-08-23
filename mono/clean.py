@@ -58,6 +58,31 @@ def process_requests(requests: pd.DataFrame) -> pd.DataFrame:
         {"MVD": "Montevideo", "INTERIOR": "Interior"}
     )
 
+    requests["diagnostico_principal_agrupado"] = requests["diagnostico1"].map(
+        {
+            "BAVC": "Bloqueo AV",
+            "BAV 2do": "Bloqueo AV",
+            "BAV 1er": "Bloqueo AV",
+            "BAVC-Post cirugia cardiaca": "Bloqueo AV",
+            "BAV post ablacion": "Bloqueo AV",
+            "BAVC-Post IAM": "Bloqueo AV",
+            "DNS - Fibrilacion auricular cronica + bradicardia": "Disfunción del nodo sinusal",
+            "DNS - Bradicardia": "Disfunción del nodo sinusal",
+            "DNS - Sindrome bradicardia-taquicardia": "Disfunción del nodo sinusal",
+            "Pausa sinusal": "Disfunción del nodo sinusal",
+            "Bloqueo de ramas - todas las combinaciones": "Bloqueo de rama",
+            "Sincope del seno carotideo": "Síncope",
+            "Sincope neurocardiogenico": "Síncope",
+            "Ritmos ventriculares - Torsade de Pointes/ Sind. de QT prolongad": "Ritmos ventriculares",
+            "Ritmos ventriculares - Fibrilacion ventricular paroxistica": "Ritmos ventriculares",
+            "Taquicardia ventricular": "Ritmos ventriculares",
+            "Cardiomiopatia congestiva": "Cardiomiopatía",
+            "Cardiomiopatia hipertrofica": "Cardiomiopatía",
+            "Ritmo sinusal normal": "Ritmo sinusal normal",
+            "RNS + estudio electrofisiologico anormal": "Estudio electrofisiólogico anormal",
+        }
+    )
+
     for column in [
         "ap_cardiovasculares",
         "ap_tabaco",
@@ -153,11 +178,19 @@ def merge_columns(merged: pd.DataFrame, column_base: str, n: int) -> pd.DataFram
 
 
 def merge_columns_and_write(
-    merged: pd.DataFrame, column_base: str, n: int, data_path: Path, file_name: str
+    merged: pd.DataFrame,
+    column_base: str,
+    n: int,
+    data_path: Path,
+    file_name: str,
+    map_dict=None,
 ):
-    merge_columns(merged, column_base, n).to_csv(
-        f"{data_path}/{file_name}", index=False, sep="\t"
-    )
+    merged_columns = merge_columns(merged, column_base, n)
+
+    if map_dict:
+        merged_columns[column_base] = merged_columns[column_base].map(map_dict)
+
+    merged_columns.to_csv(f"{data_path}/{file_name}", index=False, sep="\t")
 
 
 def clean_bool(series: pd.Series) -> pd.Series:
@@ -176,7 +209,32 @@ def clean() -> None:
     merged = process_merged(merged)
 
     merge_columns_and_write(
-        merged, "ap_cardiovascular", 4, data_path, "cardiovascular_history.tsv"
+        merged,
+        "ap_cardiovascular",
+        4,
+        data_path,
+        "cardiovascular_history.tsv",
+        {
+            "Insuficiencia cardiaca clase 1": "Insuficiencia cardíaca",
+            "Insuficiencia cardiaca clase 2": "Insuficiencia cardíaca",
+            "Insuficiencia cardiaca clase 3": "Insuficiencia cardíaca",
+            "Insuficiencia cardiaca clase 4": "Insuficiencia cardíaca",
+            "Otros antecedentes cardiovasculares": "Otros",
+            "Muerte subita": "Otros",
+            "Fiebre reumatica": "Otros",
+            "Aneurisma aortico": "Otros",
+            "Fibrilacion ventricular": "Fibrilación ventricular",
+            "Arritmia": "Arritmia",
+            "Arritmia- Otras": "Arritmia",
+            "Sincope": "Síncope",
+            "Cardiopatia valvular": "Cardiopatía valvular",
+            "Cardiopatia isquemica asintomatica": "Cardiopatía isquémica",
+            "Infarto de miocardio": "Cardiopatía isquémica",
+            "Cardiopatia congenita": "Cardiopatía congénita",
+            "Fibrilacion auricular": "Fibrilación auricular",
+            "Taquicardia ventricular": "Taquicardia ventricular",
+            "Arritmia- BAV completo": "Bloqueo AV",
+        },
     )
 
     merged.to_csv(f"{data_path}/cleaned.tsv", index=False, sep="\t")
